@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Search, MapPin, Leaf, Bell, Star, Shield, Phone, User } from "lucide-react-native";
 import { mockVendors } from "../data/mockData";
 import BottomNav from "../components/BottomNav";
 import HealthyTipsCarousel from "../components/HealthyTipsCarousel";
+import { navigateToTab } from "../navigation/tabs";
 
 export default function Home({ navigation }: any) {
-  const [activeTab, setActiveTab] = useState("home");
   const nearbyVendors = mockVendors.slice(0, 6);
   
   const categories = [
@@ -162,10 +162,8 @@ export default function Home({ navigation }: any) {
 
       {/* Bottom Navigation */}
       <BottomNav
-        activeTab={activeTab}
-        onNavigate={(tab) => {
-          setActiveTab(tab);
-        }}
+        activeTab="home"
+        onNavigate={(tab) => navigateToTab(navigation, tab)}
       />
     </View>
   );

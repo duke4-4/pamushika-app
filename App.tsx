@@ -7,9 +7,14 @@ import Welcome from './src/screens/Welcome';
 import Login from './src/screens/Login';
 import Register from './src/screens/Register';
 import Home from './src/screens/Home';
+import Search from './src/screens/Search';
+import Favorites from './src/screens/Favorites';
+import Profile from './src/screens/Profile';
 import VendorRegister from './src/screens/VendorRegister';
 import VendorOnboarding from './src/screens/VendorOnboarding';
 import VendorDashboard from './src/screens/VendorDashboard';
+import VendorProducts from './src/screens/VendorProducts';
+import VendorPosts from './src/screens/VendorPosts';
 
 const Stack = createNativeStackNavigator();
 
@@ -21,9 +26,14 @@ export default function App() {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="Search" component={Search} />
+        <Stack.Screen name="Favorites" component={Favorites} />
+        <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="VendorRegister" component={VendorRegister} />
         <Stack.Screen name="VendorOnboarding" component={VendorOnboarding} />
         <Stack.Screen name="VendorDashboard" component={VendorDashboard} />
+        <Stack.Screen name="VendorProducts" component={VendorProducts} />
+        <Stack.Screen name="VendorPosts" component={VendorPosts} />
       </Stack.Navigator>
     </NavigationContainer>
   );

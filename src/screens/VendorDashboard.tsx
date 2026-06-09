@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Package, DollarSign, Star, TrendingUp, Users, ShoppingBag, Settings, Eye, MapPin, Bell } from "lucide-react-native";
 import BottomNav from "../components/BottomNav";
+import { navigateToTab } from "../navigation/tabs";
 
 export default function VendorDashboard({ navigation }: any) {
-  const [activeTab, setActiveTab] = useState("vendor-dashboard");
-
   const stats = [
     { label: "Products", value: "24", icon: Package, bg: "bg-green-100", iconColor: "#16a34a" },
     { label: "Revenue", value: "$1,240", icon: DollarSign, bg: "bg-yellow-100", iconColor: "#ca8a04" },
@@ -143,10 +142,8 @@ export default function VendorDashboard({ navigation }: any) {
       </ScrollView>
 
       <BottomNav
-        activeTab={activeTab}
-        onNavigate={(tab) => {
-          setActiveTab(tab);
-        }}
+        activeTab="vendor-dashboard"
+        onNavigate={(tab) => navigateToTab(navigation, tab, "vendor")}
         userType="vendor"
       />
     </View>
