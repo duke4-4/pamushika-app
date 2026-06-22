@@ -114,6 +114,7 @@ export default function Home({ navigation }: any) {
                         <Shield width={16} height={16} color="#16a34a" />
                       )}
                     </View>
+                    
 
                     <View className="flex-row items-center gap-1 mb-2">
                       <MapPin width={14} height={14} color="#6b7280" />
