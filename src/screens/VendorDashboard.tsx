@@ -4,13 +4,25 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Package, DollarSign, Star, TrendingUp, Users, ShoppingBag, Settings, Eye, MapPin, Bell } from "lucide-react-native";
 import BottomNav from "../components/BottomNav";
 import { navigateToTab } from "../navigation/tabs";
+import { useAuth } from "../context/AuthContext";
+import { useAsync } from "../hooks/useAsync";
+import { fetchVendorByOwner } from "../services/vendors";
 
 export default function VendorDashboard({ navigation }: any) {
+  const { user, profile } = useAuth();
+  const { data: vendor } = useAsync(
+    () => (user ? fetchVendorByOwner(user.uid) : Promise.resolve(null)),
+    [user?.uid]
+  );
+
+  // Revenue/Views/recent orders need an `orders` table that doesn't exist
+  // yet — placeholders until that phase. Products count and rating come
+  // from the real vendor record once it loads.
   const stats = [
-    { label: "Products", value: "24", icon: Package, bg: "bg-green-100", iconColor: "#16a34a" },
-    { label: "Revenue", value: "$1,240", icon: DollarSign, bg: "bg-yellow-100", iconColor: "#ca8a04" },
-    { label: "Rating", value: "4.8", icon: Star, bg: "bg-red-100", iconColor: "#dc2626" },
-    { label: "Views", value: "156", icon: Eye, bg: "bg-blue-100", iconColor: "#2563eb" },
+    { label: "Products", value: "—", icon: Package, bg: "bg-green-100", iconColor: "#16a34a" },
+    { label: "Revenue", value: "—", icon: DollarSign, bg: "bg-yellow-100", iconColor: "#ca8a04" },
+    { label: "Rating", value: vendor ? String(vendor.rating) : "—", icon: Star, bg: "bg-red-100", iconColor: "#dc2626" },
+    { label: "Views", value: "—", icon: Eye, bg: "bg-blue-100", iconColor: "#2563eb" },
   ];
 
   const recentOrders = [
@@ -27,7 +39,7 @@ export default function VendorDashboard({ navigation }: any) {
           <View className="flex-row items-center justify-between mb-4">
             <View>
               <Text className="text-2xl font-bold text-white">Dashboard</Text>
-              <Text className="text-green-100 text-sm mt-1">Green Market Fresh</Text>
+              <Text className="text-green-100 text-sm mt-1">{vendor?.name ?? profile?.fullName ?? ""}</Text>
             </View>
             <View className="flex-row gap-2">
               <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full items-center justify-center">

@@ -1,18 +1,37 @@
--- Pamushika IN — Phase 1 schema (Supabase)
+-- Pamushika IN — Schema (Supabase)
 -- Paste this whole file into the Supabase SQL Editor (Project > SQL Editor > New query) and run it.
--- Safe to re-run: drops and recreates these 4 tables only.
+-- Safe to re-run during development: drops and recreates these tables only.
+-- NOTE: re-running wipes any rows created since the last run (catalog seed data
+-- and any test accounts/vendors created via the app). Fine in development;
+-- do not re-run against a database with real user data.
 
 drop table if exists vendor_posts;
 drop table if exists products;
 drop table if exists vendors;
 drop table if exists healthy_tips;
+drop table if exists profiles;
 
 -- ============================================================
 -- Tables
 -- ============================================================
 
+-- Phase 2: maps a Firebase Auth user to their app-level profile.
+-- Not linked to Supabase's own auth.users — Firebase is the identity
+-- provider, Supabase is the database. RLS below is intentionally
+-- permissive for now (see note at the bottom of this file).
+create table profiles (
+  firebase_uid text primary key,
+  user_type text not null check (user_type in ('consumer', 'vendor')),
+  full_name text not null,
+  email text,
+  phone text,
+  location text,
+  created_at timestamptz not null default now()
+);
+
 create table vendors (
   id uuid primary key default gen_random_uuid(),
+  owner_firebase_uid text references profiles(firebase_uid),
   name text not null,
   location text not null,
   lat double precision,
@@ -62,11 +81,10 @@ create table healthy_tips (
 );
 
 -- ============================================================
--- Row Level Security — public read-only catalog for Phase 1.
--- Owner-scoped writes arrive in Phase 2 once Firebase Auth supplies
--- a real auth.jwt()->>'sub' to check against.
+-- Row Level Security
 -- ============================================================
 
+alter table profiles enable row level security;
 alter table vendors enable row level security;
 alter table products enable row level security;
 alter table vendor_posts enable row level security;
@@ -76,6 +94,18 @@ create policy "Public read access" on vendors for select using (true);
 create policy "Public read access" on products for select using (true);
 create policy "Public read access" on vendor_posts for select using (true);
 create policy "Public read access" on healthy_tips for select using (true);
+
+-- Phase 2: writes are permissive (anyone holding the public anon key can
+-- create/update profiles and vendors) because Supabase has no way yet to
+-- verify a Firebase-issued identity token. This is a deliberate, temporary
+-- tradeoff agreed for Phase 2 — harden via Supabase Third-Party Auth
+-- (Firebase) once the Paynow Edge Function phase wires up server-side
+-- verification. Do not treat this as production-ready access control.
+create policy "Permissive read (Phase 2, hardened later)" on profiles for select using (true);
+create policy "Permissive write (Phase 2, hardened later)" on profiles for insert with check (true);
+create policy "Permissive update (Phase 2, hardened later)" on profiles for update using (true);
+create policy "Permissive write (Phase 2, hardened later)" on vendors for insert with check (true);
+create policy "Permissive update (Phase 2, hardened later)" on vendors for update using (true);
 
 -- ============================================================
 -- Seed data — transcribed from src/data/mockData.ts and the

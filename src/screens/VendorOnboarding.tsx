@@ -6,6 +6,8 @@ import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { Checkbox } from "../components/ui/Checkbox";
 import { ArrowLeft, Check } from "lucide-react-native";
+import { useAuth } from "../context/AuthContext";
+import { createVendor } from "../services/vendors";
 
 const STEPS = [
   "Business Info",
@@ -28,18 +30,49 @@ const SUBSCRIPTION_PLANS = [
 ];
 
 export default function VendorOnboarding({ navigation }: any) {
+  const { signUpWithEmail } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "", businessName: "", email: "", phone: "", nationalId: "", location: "",
-    categories: [] as string[], termsAccepted: false, selectedPlan: "Growth",
+    password: "",
+    categories: [] as string[], termsAccepted: false, selectedPlan: "Growth" as "Starter" | "Growth" | "Premium",
   });
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (currentStep === 0 && (!formData.fullName || !formData.businessName || !formData.email || !formData.password)) {
+      Alert.alert("Missing details", "Full name, business name, email, and password are required.");
+      return;
+    }
+
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
-    } else {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const profile = await signUpWithEmail({
+        email: formData.email.trim(),
+        password: formData.password,
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim() || undefined,
+        location: formData.location.trim() || undefined,
+        userType: "vendor",
+      });
+      await createVendor({
+        ownerFirebaseUid: profile.firebaseUid,
+        name: formData.businessName.trim(),
+        location: formData.location.trim() || "Not specified",
+        categories: formData.categories,
+        plan: formData.selectedPlan,
+      });
       Alert.alert("Success", "Welcome to PAMUSHIKA IN!");
-      navigation.navigate("VendorDashboard");
+      // RootNavigator switches to VendorDashboard automatically once signed in.
+    } catch (error: any) {
+      Alert.alert("Couldn't finish setup", error?.message ?? "Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -85,6 +118,7 @@ export default function VendorOnboarding({ navigation }: any) {
               <View className="gap-2"><Label>Business Name</Label><Input value={formData.businessName} onChangeText={(t) => setFormData({...formData, businessName: t})} placeholder="Fresh Produce Co." /></View>
               <View className="gap-2"><Label>Email</Label><Input value={formData.email} onChangeText={(t) => setFormData({...formData, email: t})} placeholder="business@email.com" keyboardType="email-address" /></View>
               <View className="gap-2"><Label>Phone Number</Label><Input value={formData.phone} onChangeText={(t) => setFormData({...formData, phone: t})} placeholder="+263 XXX XXX XXX" keyboardType="phone-pad" /></View>
+              <View className="gap-2"><Label>Password</Label><Input value={formData.password} onChangeText={(t) => setFormData({...formData, password: t})} placeholder="••••••••" secureTextEntry /></View>
             </View>
           )}
 
@@ -146,7 +180,7 @@ export default function VendorOnboarding({ navigation }: any) {
               <Label>Choose your subscription plan</Label>
               <View className="gap-3">
                 {SUBSCRIPTION_PLANS.map((plan) => (
-                  <TouchableOpacity key={plan.name} onPress={() => setFormData({...formData, selectedPlan: plan.name})} className={`w-full p-4 rounded-lg border-2 relative ${formData.selectedPlan === plan.name ? "border-green-600 bg-green-50" : "border-gray-200"}`}>
+                  <TouchableOpacity key={plan.name} onPress={() => setFormData({...formData, selectedPlan: plan.name as typeof formData.selectedPlan})} className={`w-full p-4 rounded-lg border-2 relative ${formData.selectedPlan === plan.name ? "border-green-600 bg-green-50" : "border-gray-200"}`}>
                     {plan.popular && <View className="absolute -top-3 right-4 bg-yellow-400 px-2 py-1 rounded-full"><Text className="text-xs font-medium text-gray-900">Popular</Text></View>}
                     <View className="flex-row items-center justify-between mb-2">
                       <Text className="font-semibold text-gray-900">{plan.name}</Text>
@@ -190,12 +224,12 @@ export default function VendorOnboarding({ navigation }: any) {
         </ScrollView>
 
         <View className="p-6 border-t border-gray-100">
-          <Button 
-            onPress={handleNext} 
-            disabled={currentStep === 4 && !formData.termsAccepted}
-            className={currentStep === 4 && !formData.termsAccepted ? "opacity-50" : ""}
+          <Button
+            onPress={handleNext}
+            disabled={submitting || (currentStep === 4 && !formData.termsAccepted)}
+            className={submitting || (currentStep === 4 && !formData.termsAccepted) ? "opacity-50" : ""}
           >
-            {currentStep === STEPS.length - 1 ? "Complete Payment" : "Continue"}
+            {submitting ? "Setting up your account..." : currentStep === STEPS.length - 1 ? "Complete Payment" : "Continue"}
           </Button>
         </View>
       </KeyboardAvoidingView>

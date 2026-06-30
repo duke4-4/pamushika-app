@@ -1,13 +1,26 @@
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Bell, ChevronRight, CreditCard, HelpCircle, LogOut, MapPin, Settings, Shield, Store, User } from "lucide-react-native";
 import BottomNav from "../components/BottomNav";
 import { navigateToTab, UserType } from "../navigation/tabs";
+import { useAuth } from "../context/AuthContext";
+import { useAsync } from "../hooks/useAsync";
+import { fetchVendorByOwner } from "../services/vendors";
 
-export default function Profile({ navigation, route }: any) {
-  const userType: UserType = route?.params?.userType === "vendor" ? "vendor" : "consumer";
+export default function Profile({ navigation }: any) {
+  const { user, profile, signOut } = useAuth();
+  const userType: UserType = profile?.userType === "vendor" ? "vendor" : "consumer";
   const isVendor = userType === "vendor";
+
+  const { data: vendor } = useAsync(
+    () => (isVendor && user ? fetchVendorByOwner(user.uid) : Promise.resolve(null)),
+    [isVendor, user?.uid]
+  );
+
+  const displayName = (isVendor ? vendor?.name : profile?.fullName) || "";
+  const displaySubtitle = isVendor ? `${vendor?.plan ?? "Starter"} vendor` : (profile?.location || "");
+  const initial = displayName.charAt(0).toUpperCase() || "?";
 
   const settings = [
     { label: "Personal details", icon: User },
@@ -16,6 +29,10 @@ export default function Profile({ navigation, route }: any) {
     { label: "Payments", icon: CreditCard },
     { label: "Help and support", icon: HelpCircle },
   ];
+
+  const handleSignOut = () => {
+    signOut().catch((error: any) => Alert.alert("Couldn't sign out", error?.message ?? "Please try again."));
+  };
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -38,14 +55,14 @@ export default function Profile({ navigation, route }: any) {
           <View className="bg-white rounded-2xl p-4 shadow-sm">
             <View className="flex-row items-center gap-4">
               <View className="w-20 h-20 rounded-2xl bg-green-100 items-center justify-center">
-                <Text className="text-3xl font-bold text-green-700">{isVendor ? "G" : "T"}</Text>
+                <Text className="text-3xl font-bold text-green-700">{initial}</Text>
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center gap-2">
-                  <Text className="text-lg font-bold text-gray-900">{isVendor ? "Green Market Fresh" : "Tariro Moyo"}</Text>
-                  {isVendor && <Shield width={16} height={16} color="#16a34a" />}
+                  <Text className="text-lg font-bold text-gray-900">{displayName}</Text>
+                  {isVendor && vendor?.verified && <Shield width={16} height={16} color="#16a34a" />}
                 </View>
-                <Text className="text-sm text-gray-500 mt-1">{isVendor ? "Premium vendor" : "Harare, Zimbabwe"}</Text>
+                <Text className="text-sm text-gray-500 mt-1">{displaySubtitle}</Text>
                 <TouchableOpacity className="self-start mt-3 px-3 py-1.5 rounded-full bg-green-50">
                   <Text className="text-xs font-semibold text-green-700">Edit profile</Text>
                 </TouchableOpacity>
@@ -57,15 +74,15 @@ export default function Profile({ navigation, route }: any) {
         <View className="px-4 py-5">
           <View className="flex-row gap-3 mb-5">
             <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm">
-              <Text className="text-2xl font-bold text-gray-900">{isVendor ? "24" : "12"}</Text>
+              <Text className="text-2xl font-bold text-gray-900">—</Text>
               <Text className="text-xs text-gray-500 mt-1">{isVendor ? "Products" : "Favorites"}</Text>
             </View>
             <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm">
-              <Text className="text-2xl font-bold text-gray-900">{isVendor ? "4.8" : "7"}</Text>
+              <Text className="text-2xl font-bold text-gray-900">{isVendor ? (vendor?.rating ?? "—") : "—"}</Text>
               <Text className="text-xs text-gray-500 mt-1">{isVendor ? "Rating" : "Orders"}</Text>
             </View>
             <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm">
-              <Text className="text-2xl font-bold text-gray-900">{isVendor ? "156" : "3"}</Text>
+              <Text className="text-2xl font-bold text-gray-900">—</Text>
               <Text className="text-xs text-gray-500 mt-1">{isVendor ? "Views" : "Vendors"}</Text>
             </View>
           </View>
@@ -104,7 +121,7 @@ export default function Profile({ navigation, route }: any) {
             })}
           </View>
 
-          <TouchableOpacity className="mt-5 bg-white rounded-2xl p-4 flex-row items-center gap-3 shadow-sm">
+          <TouchableOpacity onPress={handleSignOut} className="mt-5 bg-white rounded-2xl p-4 flex-row items-center gap-3 shadow-sm">
             <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center">
               <LogOut width={19} height={19} color="#dc2626" />
             </View>

@@ -6,11 +6,20 @@ import BottomNav from "../components/BottomNav";
 import { SkeletonList } from "../components/LoadingFeedback";
 import { useAsync } from "../hooks/useAsync";
 import { fetchVendorPosts } from "../services/vendorPosts";
-import { DEMO_VENDOR_ID } from "../services/vendors";
+import { fetchVendorByOwner } from "../services/vendors";
+import { useAuth } from "../context/AuthContext";
 import { navigateToTab } from "../navigation/tabs";
 
 export default function VendorPosts({ navigation }: any) {
-  const { data, loading } = useAsync(() => fetchVendorPosts(DEMO_VENDOR_ID), []);
+  const { user } = useAuth();
+  const { data: vendor } = useAsync(
+    () => (user ? fetchVendorByOwner(user.uid) : Promise.resolve(null)),
+    [user?.uid]
+  );
+  const { data, loading } = useAsync(
+    () => (vendor ? fetchVendorPosts(vendor.id) : Promise.resolve([])),
+    [vendor?.id]
+  );
   const posts = data ?? [];
 
   return (

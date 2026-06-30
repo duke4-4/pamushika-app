@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { Alert, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Label } from "../components/ui/Label";
 import { ArrowLeft } from "lucide-react-native";
+import { useAuth } from "../context/AuthContext";
 
 export default function Register({ navigation }: any) {
+  const { signUpWithEmail } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -15,9 +18,27 @@ export default function Register({ navigation }: any) {
     location: "",
   });
 
-  const handleSubmit = () => {
-    // Mock authentication
-    navigation.navigate("Home");
+  const handleSubmit = async () => {
+    if (!formData.fullName || !formData.email || !formData.password) {
+      Alert.alert("Missing details", "Full name, email, and password are required.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await signUpWithEmail({
+        email: formData.email.trim(),
+        password: formData.password,
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim() || undefined,
+        location: formData.location.trim() || undefined,
+        userType: "consumer",
+      });
+      // RootNavigator switches to Home automatically once signed in.
+    } catch (error: any) {
+      Alert.alert("Couldn't create account", error?.message ?? "Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -90,8 +111,8 @@ export default function Register({ navigation }: any) {
               />
             </View>
 
-            <Button onPress={handleSubmit} className="mt-6">
-              Create Account
+            <Button onPress={handleSubmit} disabled={submitting} className={`mt-6 ${submitting ? "opacity-50" : ""}`}>
+              {submitting ? "Creating account..." : "Create Account"}
             </Button>
           </View>
         </ScrollView>

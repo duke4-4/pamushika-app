@@ -6,11 +6,20 @@ import BottomNav from "../components/BottomNav";
 import { SkeletonList } from "../components/LoadingFeedback";
 import { useAsync } from "../hooks/useAsync";
 import { fetchProductsByVendor } from "../services/products";
-import { DEMO_VENDOR_ID } from "../services/vendors";
+import { fetchVendorByOwner } from "../services/vendors";
+import { useAuth } from "../context/AuthContext";
 import { navigateToTab } from "../navigation/tabs";
 
 export default function VendorProducts({ navigation }: any) {
-  const { data, loading } = useAsync(() => fetchProductsByVendor(DEMO_VENDOR_ID), []);
+  const { user } = useAuth();
+  const { data: vendor } = useAsync(
+    () => (user ? fetchVendorByOwner(user.uid) : Promise.resolve(null)),
+    [user?.uid]
+  );
+  const { data, loading } = useAsync(
+    () => (vendor ? fetchProductsByVendor(vendor.id) : Promise.resolve([])),
+    [vendor?.id]
+  );
   const products = data ?? [];
 
   return (

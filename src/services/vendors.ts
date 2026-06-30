@@ -1,10 +1,13 @@
 import { supabase } from "../lib/supabase";
 import { Vendor } from "../types/marketplace";
 
-// TODO(Phase 2): replace with the signed-in vendor's own id once Firebase Auth
-// is wired in. Until then, vendor-perspective screens (VendorProducts,
-// VendorPosts) operate on this single seeded vendor.
-export const DEMO_VENDOR_ID = "11111111-1111-1111-1111-111111111111";
+export interface CreateVendorInput {
+  ownerFirebaseUid: string;
+  name: string;
+  location: string;
+  categories: string[];
+  plan: Vendor["plan"];
+}
 
 function toVendor(row: any): Vendor {
   return {
@@ -38,4 +41,32 @@ export async function fetchVendorById(vendorId: string): Promise<Vendor | null> 
 
   if (error) throw error;
   return data ? toVendor(data) : null;
+}
+
+export async function fetchVendorByOwner(ownerFirebaseUid: string): Promise<Vendor | null> {
+  const { data, error } = await supabase
+    .from("vendors")
+    .select("*")
+    .eq("owner_firebase_uid", ownerFirebaseUid)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? toVendor(data) : null;
+}
+
+export async function createVendor(input: CreateVendorInput): Promise<Vendor> {
+  const { data, error } = await supabase
+    .from("vendors")
+    .insert({
+      owner_firebase_uid: input.ownerFirebaseUid,
+      name: input.name,
+      location: input.location,
+      categories: input.categories,
+      plan: input.plan,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return toVendor(data);
 }
