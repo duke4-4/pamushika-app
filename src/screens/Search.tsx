@@ -3,7 +3,9 @@ import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "reac
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Filter, MapPin, Search as SearchIcon, SlidersHorizontal, Star } from "lucide-react-native";
 import BottomNav from "../components/BottomNav";
-import { mockProducts } from "../data/mockData";
+import { SkeletonList } from "../components/LoadingFeedback";
+import { useAsync } from "../hooks/useAsync";
+import { fetchProducts } from "../services/products";
 import { navigateToTab } from "../navigation/tabs";
 
 const categories = ["All", "Fruits", "Vegetables", "Indigenous Foods", "Organic Foods"];
@@ -11,9 +13,10 @@ const categories = ["All", "Fruits", "Vegetables", "Indigenous Foods", "Organic 
 export default function Search({ navigation }: any) {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const { data: allProducts, loading } = useAsync(fetchProducts, []);
 
   const products = useMemo(() => {
-    return mockProducts.filter((product) => {
+    return (allProducts ?? []).filter((product) => {
       const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
       const matchesQuery =
         product.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -22,7 +25,7 @@ export default function Search({ navigation }: any) {
 
       return matchesCategory && matchesQuery;
     });
-  }, [query, selectedCategory]);
+  }, [allProducts, query, selectedCategory]);
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -82,6 +85,9 @@ export default function Search({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
+          {loading ? (
+            <SkeletonList rows={4} />
+          ) : (
           <View className="gap-3">
             {products.map((product) => (
               <TouchableOpacity key={product.id} activeOpacity={0.86} className="bg-white rounded-2xl p-3 shadow-sm">
@@ -95,10 +101,12 @@ export default function Search({ navigation }: any) {
                     <Text className="text-xs text-gray-500 mt-1">{product.unit}</Text>
                     <Text className="text-sm text-gray-700 mt-2" numberOfLines={2}>{product.description}</Text>
                     <View className="flex-row items-center justify-between mt-3">
-                      <View className="flex-row items-center gap-1">
-                        <MapPin width={13} height={13} color="#6b7280" />
-                        <Text className="text-xs text-gray-500">{product.distance}</Text>
-                      </View>
+                      {product.distance ? (
+                        <View className="flex-row items-center gap-1">
+                          <MapPin width={13} height={13} color="#6b7280" />
+                          <Text className="text-xs text-gray-500">{product.distance}</Text>
+                        </View>
+                      ) : <View />}
                       <View className="flex-row items-center gap-1">
                         <Star width={14} height={14} color="#facc15" />
                         <Text className="text-xs font-semibold text-gray-800">{product.rating}</Text>
@@ -115,6 +123,7 @@ export default function Search({ navigation }: any) {
               </TouchableOpacity>
             ))}
           </View>
+          )}
         </View>
       </ScrollView>
 

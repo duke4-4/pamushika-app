@@ -3,13 +3,21 @@ import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Heart, MapPin, Phone, Shield, Star } from "lucide-react-native";
 import BottomNav from "../components/BottomNav";
-import { mockProducts, mockVendors } from "../data/mockData";
+import { SkeletonList } from "../components/LoadingFeedback";
+import { useAsync } from "../hooks/useAsync";
+import { fetchProducts } from "../services/products";
+import { fetchVendors } from "../services/vendors";
 import { navigateToTab } from "../navigation/tabs";
 
+// TODO(Phase 2): scope these to the signed-in user's actual saved items once
+// Firebase Auth exists. For now this just shows live catalog data so the
+// screen isn't stuck on static mocks; the heart toggle isn't wired up yet.
 export default function Favorites({ navigation }: any) {
   const [mode, setMode] = useState<"products" | "vendors">("products");
-  const favoriteProducts = mockProducts.slice(0, 4);
-  const favoriteVendors = mockVendors.slice(0, 3);
+  const { data: products, loading: productsLoading } = useAsync(fetchProducts, []);
+  const { data: vendors, loading: vendorsLoading } = useAsync(fetchVendors, []);
+  const favoriteProducts = (products ?? []).slice(0, 4);
+  const favoriteVendors = (vendors ?? []).slice(0, 3);
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -48,6 +56,9 @@ export default function Favorites({ navigation }: any) {
         </View>
 
         {mode === "products" ? (
+          productsLoading ? (
+            <View className="px-4 py-5"><SkeletonList rows={4} /></View>
+          ) : (
           <View className="px-4 py-5 gap-3">
             {favoriteProducts.map((product) => (
               <TouchableOpacity key={product.id} activeOpacity={0.86} className="bg-white rounded-2xl p-3 shadow-sm">
@@ -72,6 +83,9 @@ export default function Favorites({ navigation }: any) {
               </TouchableOpacity>
             ))}
           </View>
+          )
+        ) : vendorsLoading ? (
+          <View className="px-4 py-5"><SkeletonList rows={3} /></View>
         ) : (
           <View className="px-4 py-5 gap-3">
             {favoriteVendors.map((vendor) => (

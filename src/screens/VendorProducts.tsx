@@ -3,11 +3,15 @@ import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Edit3, Package, Plus, Search, TrendingUp } from "lucide-react-native";
 import BottomNav from "../components/BottomNav";
-import { mockProducts } from "../data/mockData";
+import { SkeletonList } from "../components/LoadingFeedback";
+import { useAsync } from "../hooks/useAsync";
+import { fetchProductsByVendor } from "../services/products";
+import { DEMO_VENDOR_ID } from "../services/vendors";
 import { navigateToTab } from "../navigation/tabs";
 
 export default function VendorProducts({ navigation }: any) {
-  const products = mockProducts.filter((product) => product.vendorId === "v1");
+  const { data, loading } = useAsync(() => fetchProductsByVendor(DEMO_VENDOR_ID), []);
+  const products = data ?? [];
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -50,6 +54,9 @@ export default function VendorProducts({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
+          {loading ? (
+            <SkeletonList rows={4} />
+          ) : (
           <View className="gap-3">
             {products.map((product) => (
               <View key={product.id} className="bg-white rounded-2xl p-3 shadow-sm">
@@ -78,6 +85,7 @@ export default function VendorProducts({ navigation }: any) {
               </View>
             ))}
           </View>
+          )}
         </View>
       </ScrollView>
 

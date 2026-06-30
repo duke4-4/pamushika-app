@@ -3,40 +3,16 @@ import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CalendarDays, Eye, MessageCircle, Plus, Send, Sparkles } from "lucide-react-native";
 import BottomNav from "../components/BottomNav";
-import { mockProducts } from "../data/mockData";
+import { SkeletonList } from "../components/LoadingFeedback";
+import { useAsync } from "../hooks/useAsync";
+import { fetchVendorPosts } from "../services/vendorPosts";
+import { DEMO_VENDOR_ID } from "../services/vendors";
 import { navigateToTab } from "../navigation/tabs";
 
-const posts = [
-  {
-    id: "1",
-    title: "Fresh ginger restocked",
-    body: "Organic ginger roots are ready for pickup today. Great for tea, soups, and marinades.",
-    productId: "1",
-    views: "84",
-    replies: "12",
-    date: "Today",
-  },
-  {
-    id: "2",
-    title: "Weekend harvest bundle",
-    body: "Sweet potatoes, pumpkin leaves, and seasonal herbs packed for family meals.",
-    productId: "3",
-    views: "126",
-    replies: "18",
-    date: "Fri",
-  },
-  {
-    id: "3",
-    title: "Cooking tip: pumpkin leaves",
-    body: "Wash, slice, and simmer gently with tomatoes and peanut butter for a rich local dish.",
-    productId: "6",
-    views: "203",
-    replies: "27",
-    date: "Mon",
-  },
-];
-
 export default function VendorPosts({ navigation }: any) {
+  const { data, loading } = useAsync(() => fetchVendorPosts(DEMO_VENDOR_ID), []);
+  const posts = data ?? [];
+
   return (
     <View className="flex-1 bg-gray-50">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 110 }}>
@@ -63,12 +39,12 @@ export default function VendorPosts({ navigation }: any) {
         </SafeAreaView>
 
         <View className="px-4 py-5 gap-4">
-          {posts.map((post) => {
-            const product = mockProducts.find((item) => item.id === post.productId) ?? mockProducts[0];
-
+          {loading ? (
+            <SkeletonList rows={3} />
+          ) : posts.map((post) => {
             return (
               <View key={post.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
-                <Image source={{ uri: product.image }} className="w-full h-40 bg-gray-100" />
+                <Image source={{ uri: post.productImage }} className="w-full h-40 bg-gray-100" />
                 <View className="p-4">
                   <View className="flex-row items-center justify-between mb-2">
                     <View className="flex-row items-center gap-1.5">
@@ -76,7 +52,7 @@ export default function VendorPosts({ navigation }: any) {
                       <Text className="text-xs text-gray-500">{post.date}</Text>
                     </View>
                     <View className="px-2.5 py-1 bg-green-50 rounded-full">
-                      <Text className="text-xs font-semibold text-green-700">{product.category}</Text>
+                      <Text className="text-xs font-semibold text-green-700">{post.productCategory}</Text>
                     </View>
                   </View>
 

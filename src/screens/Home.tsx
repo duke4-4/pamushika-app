@@ -2,14 +2,17 @@ import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Search, MapPin, Leaf, Bell, Star, Shield, Phone, User } from "lucide-react-native";
-import { mockVendors } from "../data/mockData";
 import BottomNav from "../components/BottomNav";
 import HealthyTipsCarousel from "../components/HealthyTipsCarousel";
+import { SkeletonList } from "../components/LoadingFeedback";
 import { navigateToTab } from "../navigation/tabs";
+import { useAsync } from "../hooks/useAsync";
+import { fetchVendors } from "../services/vendors";
 
 export default function Home({ navigation }: any) {
-  const nearbyVendors = mockVendors.slice(0, 6);
-  
+  const { data: vendors, loading } = useAsync(fetchVendors, []);
+  const nearbyVendors = (vendors ?? []).slice(0, 6);
+
   const categories = [
     { name: "All", icon: "🌿" },
     { name: "Fruits", icon: "🍎" },
@@ -95,6 +98,9 @@ export default function Home({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
+          {loading ? (
+            <SkeletonList rows={3} />
+          ) : (
           <View className="gap-3">
             {nearbyVendors.map((vendor) => (
               <TouchableOpacity
@@ -118,8 +124,12 @@ export default function Home({ navigation }: any) {
                     <View className="flex-row items-center gap-1 mb-2">
                       <MapPin width={14} height={14} color="#6b7280" />
                       <Text className="text-xs text-gray-500" numberOfLines={1}>{vendor.location}</Text>
-                      <Text className="text-xs text-gray-400">•</Text>
-                      <Text className="text-xs text-green-600 font-medium">{vendor.distance}</Text>
+                      {vendor.distance && (
+                        <>
+                          <Text className="text-xs text-gray-400">•</Text>
+                          <Text className="text-xs text-green-600 font-medium">{vendor.distance}</Text>
+                        </>
+                      )}
                     </View>
 
                     <View className="flex-row items-center justify-between mt-1">
@@ -157,6 +167,7 @@ export default function Home({ navigation }: any) {
               </TouchableOpacity>
             ))}
           </View>
+          )}
         </View>
       </ScrollView>
 
