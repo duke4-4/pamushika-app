@@ -17,6 +17,10 @@ import VendorOnboarding from './src/screens/VendorOnboarding';
 import VendorDashboard from './src/screens/VendorDashboard';
 import VendorProducts from './src/screens/VendorProducts';
 import VendorPosts from './src/screens/VendorPosts';
+import ProductDetails from './src/screens/ProductDetails';
+import VendorProfile from './src/screens/VendorProfile';
+import HealthyLiving from './src/screens/HealthyLiving';
+import EditProfile from './src/screens/EditProfile';
 
 const Stack = createNativeStackNavigator();
 
@@ -46,6 +50,7 @@ function RootNavigator() {
             <Stack.Screen name="VendorProducts" component={VendorProducts} />
             <Stack.Screen name="VendorPosts" component={VendorPosts} />
             <Stack.Screen name="Profile" component={Profile} />
+            <Stack.Screen name="EditProfile" component={EditProfile} />
           </>
         ) : (
           <>
@@ -53,6 +58,10 @@ function RootNavigator() {
             <Stack.Screen name="Search" component={Search} />
             <Stack.Screen name="Favorites" component={Favorites} />
             <Stack.Screen name="Profile" component={Profile} />
+            <Stack.Screen name="ProductDetails" component={ProductDetails} />
+            <Stack.Screen name="VendorProfile" component={VendorProfile} />
+            <Stack.Screen name="HealthyLiving" component={HealthyLiving} />
+            <Stack.Screen name="EditProfile" component={EditProfile} />
             <Stack.Screen name="VendorRegister" component={VendorRegister} />
             <Stack.Screen name="VendorOnboarding" component={VendorOnboarding} />
           </>

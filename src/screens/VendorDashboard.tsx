@@ -1,12 +1,13 @@
 import React from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { Alert, View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Package, DollarSign, Star, TrendingUp, Users, ShoppingBag, Settings, Eye, MapPin, Bell } from "lucide-react-native";
+import { Bell, Crown, DollarSign, Eye, MapPin, Package, Settings, ShoppingBag, Star, Users } from "lucide-react-native";
 import BottomNav from "../components/BottomNav";
 import { navigateToTab } from "../navigation/tabs";
 import { useAuth } from "../context/AuthContext";
 import { useAsync } from "../hooks/useAsync";
 import { fetchVendorByOwner } from "../services/vendors";
+import { fetchProductCountByVendor } from "../services/products";
 
 export default function VendorDashboard({ navigation }: any) {
   const { user, profile } = useAuth();
@@ -14,28 +15,25 @@ export default function VendorDashboard({ navigation }: any) {
     () => (user ? fetchVendorByOwner(user.uid) : Promise.resolve(null)),
     [user?.uid]
   );
+  const { data: productCount } = useAsync(
+    () => (vendor ? fetchProductCountByVendor(vendor.id) : Promise.resolve(0)),
+    [vendor?.id]
+  );
 
-  // Revenue/Views/recent orders need an `orders` table that doesn't exist
-  // yet — placeholders until that phase. Products count and rating come
-  // from the real vendor record once it loads.
   const stats = [
-    { label: "Products", value: "—", icon: Package, bg: "bg-green-100", iconColor: "#16a34a" },
+    { label: "Products", value: productCount != null ? String(productCount) : "—", icon: Package, bg: "bg-green-100", iconColor: "#16a34a" },
     { label: "Revenue", value: "—", icon: DollarSign, bg: "bg-yellow-100", iconColor: "#ca8a04" },
     { label: "Rating", value: vendor ? String(vendor.rating) : "—", icon: Star, bg: "bg-red-100", iconColor: "#dc2626" },
     { label: "Views", value: "—", icon: Eye, bg: "bg-blue-100", iconColor: "#2563eb" },
   ];
 
-  const recentOrders = [
-    { id: "1", customer: "Sarah M.", product: "Fresh Ginger", amount: "$2.50", status: "Pending" },
-    { id: "2", customer: "John D.", product: "Sweet Potatoes", amount: "$4.50", status: "Completed" },
-    { id: "3", customer: "Grace K.", product: "Pumpkin Leaves", amount: "$3.00", status: "Completed" },
-  ];
+  const isPremium = vendor?.plan === "Premium";
 
   return (
     <View className="flex-1 bg-gray-50">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
-        <SafeAreaView edges={['top']} className="bg-green-600 px-4 pt-6 pb-6 shadow-lg">
+        <SafeAreaView edges={["top"]} className="bg-green-600 px-4 pt-6 pb-6 shadow-lg">
           <View className="flex-row items-center justify-between mb-4">
             <View>
               <Text className="text-2xl font-bold text-white">Dashboard</Text>
@@ -45,22 +43,23 @@ export default function VendorDashboard({ navigation }: any) {
               <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full items-center justify-center">
                 <Bell width={20} height={20} color="white" />
               </TouchableOpacity>
-              <TouchableOpacity className="w-10 h-10 bg-white/20 rounded-full items-center justify-center">
+              <TouchableOpacity
+                onPress={() => navigation.navigate("EditProfile")}
+                className="w-10 h-10 bg-white/20 rounded-full items-center justify-center"
+              >
                 <Settings width={20} height={20} color="white" />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Quick Stats */}
+          {/* Stats grid */}
           <View className="flex-row flex-wrap justify-between gap-y-3">
             {stats.map((stat, index) => {
               const IconComp = stat.icon;
               return (
                 <View key={index} className="w-[48%] bg-white/15 rounded-2xl p-4">
-                  <View className="flex-row items-center gap-2 mb-2">
-                    <View className={`w-10 h-10 rounded-xl ${stat.bg} items-center justify-center`}>
-                      <IconComp width={20} height={20} color={stat.iconColor} />
-                    </View>
+                  <View className="w-10 h-10 rounded-xl bg-white/20 items-center justify-center mb-2">
+                    <IconComp width={20} height={20} color="white" />
                   </View>
                   <Text className="text-2xl font-bold text-white">{stat.value}</Text>
                   <Text className="text-sm text-green-50 mt-1">{stat.label}</Text>
@@ -70,30 +69,62 @@ export default function VendorDashboard({ navigation }: any) {
           </View>
         </SafeAreaView>
 
-        <View className="px-4 py-6 gap-6">
+        <View className="px-4 py-5 gap-5">
+          {/* Upgrade banner (only for non-Premium) */}
+          {!isPremium && vendor && (
+            <TouchableOpacity
+              onPress={() => Alert.alert("Upgrade to Premium", "Premium vendor plan with priority listing and analytics is coming in Phase 4.")}
+              className="bg-yellow-400 rounded-2xl p-4 flex-row items-center gap-3"
+              activeOpacity={0.85}
+            >
+              <View className="w-12 h-12 bg-white/20 rounded-xl items-center justify-center">
+                <Crown width={24} height={24} color="white" />
+              </View>
+              <View className="flex-1">
+                <Text className="font-bold text-white">Upgrade to Premium</Text>
+                <Text className="text-xs text-yellow-100 mt-0.5">Get priority listing and analytics</Text>
+              </View>
+              <View className="px-3 py-1.5 bg-white rounded-full">
+                <Text className="text-yellow-600 text-xs font-bold">Upgrade</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
           {/* Quick Actions */}
           <View>
             <Text className="font-bold text-lg mb-4 text-gray-900">Quick Actions</Text>
             <View className="flex-row flex-wrap justify-between gap-y-3">
-              <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl shadow-sm">
+              <TouchableOpacity
+                onPress={() => navigateToTab(navigation, "vendor-products", "vendor")}
+                className="w-[48%] bg-white p-5 rounded-2xl shadow-sm"
+                activeOpacity={0.85}
+              >
                 <View className="w-12 h-12 bg-green-100 rounded-xl items-center justify-center mb-3">
                   <Package width={24} height={24} color="#16a34a" />
                 </View>
                 <Text className="font-semibold text-gray-900">Products</Text>
-                <Text className="text-xs text-gray-500 mt-1">24 items</Text>
+                <Text className="text-xs text-gray-500 mt-1">
+                  {productCount != null ? `${productCount} listed` : "Manage listing"}
+                </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl shadow-sm">
+              <TouchableOpacity
+                onPress={() => Alert.alert("Coming soon", "Orders management is in a future phase.")}
+                className="w-[48%] bg-white p-5 rounded-2xl shadow-sm"
+                activeOpacity={0.85}
+              >
                 <View className="w-12 h-12 bg-yellow-100 rounded-xl items-center justify-center mb-3">
                   <ShoppingBag width={24} height={24} color="#ca8a04" />
                 </View>
                 <Text className="font-semibold text-gray-900">Orders</Text>
-                <Text className="text-xs text-gray-500 mt-1">
-                  <Text className="text-red-600 font-semibold">3</Text> pending
-                </Text>
+                <Text className="text-xs text-gray-500 mt-1">Coming soon</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl shadow-sm">
+
+              <TouchableOpacity
+                onPress={() => Alert.alert("Coming soon", "Customer insights are in a future phase.")}
+                className="w-[48%] bg-white p-5 rounded-2xl shadow-sm"
+                activeOpacity={0.85}
+              >
                 <View className="w-12 h-12 bg-blue-100 rounded-xl items-center justify-center mb-3">
                   <Users width={24} height={24} color="#2563eb" />
                 </View>
@@ -101,7 +132,11 @@ export default function VendorDashboard({ navigation }: any) {
                 <Text className="text-xs text-gray-500 mt-1">View insights</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity className="w-[48%] bg-white p-5 rounded-2xl shadow-sm">
+              <TouchableOpacity
+                onPress={() => navigation.navigate("EditProfile")}
+                className="w-[48%] bg-white p-5 rounded-2xl shadow-sm"
+                activeOpacity={0.85}
+              >
                 <View className="w-12 h-12 bg-purple-100 rounded-xl items-center justify-center mb-3">
                   <MapPin width={24} height={24} color="#9333ea" />
                 </View>
@@ -111,43 +146,17 @@ export default function VendorDashboard({ navigation }: any) {
             </View>
           </View>
 
-          {/* Recent Orders */}
-          <View className="bg-white rounded-xl border border-gray-200 p-4">
+          {/* Recent Orders — empty state until orders table exists */}
+          <View className="bg-white rounded-2xl border border-gray-100 p-5">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="font-semibold text-gray-900">Recent Orders</Text>
-              <TouchableOpacity><Text className="text-sm text-green-600 font-medium">View All</Text></TouchableOpacity>
+              <Text className="font-bold text-gray-900">Recent Orders</Text>
             </View>
-
-            <View className="gap-3">
-              {recentOrders.map((order) => (
-                <View key={order.id} className="flex-row items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <View className="flex-1">
-                    <Text className="font-medium text-sm text-gray-900">{order.customer}</Text>
-                    <Text className="text-xs text-gray-500 mt-1">{order.product}</Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="font-semibold text-sm text-green-600">{order.amount}</Text>
-                    <View className={`mt-1 px-2 py-1 rounded-full ${order.status === "Pending" ? "bg-yellow-100" : "bg-green-100"}`}>
-                      <Text className={`text-xs ${order.status === "Pending" ? "text-yellow-700" : "text-green-700"}`}>{order.status}</Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* Performance Chart Placeholder */}
-          <View className="bg-white rounded-xl border border-gray-200 p-4">
-            <Text className="font-semibold mb-4 text-gray-900">This Month's Performance</Text>
-            <View className="h-48 bg-green-50 rounded-lg items-end justify-around flex-row p-4 pb-0">
-              <View className="items-center gap-2"><View className="w-12 bg-green-600 rounded-t" style={{ height: "60%" }} /><Text className="text-xs text-gray-600 pb-2">Wk 1</Text></View>
-              <View className="items-center gap-2"><View className="w-12 bg-green-600 rounded-t" style={{ height: "80%" }} /><Text className="text-xs text-gray-600 pb-2">Wk 2</Text></View>
-              <View className="items-center gap-2"><View className="w-12 bg-green-600 rounded-t" style={{ height: "70%" }} /><Text className="text-xs text-gray-600 pb-2">Wk 3</Text></View>
-              <View className="items-center gap-2"><View className="w-12 bg-green-600 rounded-t" style={{ height: "90%" }} /><Text className="text-xs text-gray-600 pb-2">Wk 4</Text></View>
-            </View>
-            <View className="flex-row items-center justify-center gap-2 mt-4 pt-4 border-t border-gray-100">
-              <TrendingUp width={16} height={16} color="#16a34a" />
-              <Text className="text-gray-700 text-sm">Sales increased by <Text className="font-semibold text-green-600">12%</Text></Text>
+            <View className="items-center py-8">
+              <ShoppingBag width={36} height={36} color="#d1d5db" />
+              <Text className="text-gray-400 text-sm mt-3">No orders yet</Text>
+              <Text className="text-gray-300 text-xs mt-1 text-center">
+                Orders will appear here once customers contact you
+              </Text>
             </View>
           </View>
         </View>

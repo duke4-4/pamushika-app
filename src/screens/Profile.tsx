@@ -7,6 +7,8 @@ import { navigateToTab, UserType } from "../navigation/tabs";
 import { useAuth } from "../context/AuthContext";
 import { useAsync } from "../hooks/useAsync";
 import { fetchVendorByOwner } from "../services/vendors";
+import { fetchProductCountByVendor } from "../services/products";
+import { fetchFavoriteProductIds } from "../services/favorites";
 
 export default function Profile({ navigation }: any) {
   const { user, profile, signOut } = useAuth();
@@ -15,6 +17,14 @@ export default function Profile({ navigation }: any) {
 
   const { data: vendor } = useAsync(
     () => (isVendor && user ? fetchVendorByOwner(user.uid) : Promise.resolve(null)),
+    [isVendor, user?.uid]
+  );
+  const { data: productCount } = useAsync(
+    () => (isVendor && vendor ? fetchProductCountByVendor(vendor.id) : Promise.resolve(null)),
+    [isVendor, vendor?.id]
+  );
+  const { data: favIds } = useAsync(
+    () => (!isVendor && user ? fetchFavoriteProductIds(user.uid) : Promise.resolve(null)),
     [isVendor, user?.uid]
   );
 
@@ -63,7 +73,10 @@ export default function Profile({ navigation }: any) {
                   {isVendor && vendor?.verified && <Shield width={16} height={16} color="#16a34a" />}
                 </View>
                 <Text className="text-sm text-gray-500 mt-1">{displaySubtitle}</Text>
-                <TouchableOpacity className="self-start mt-3 px-3 py-1.5 rounded-full bg-green-50">
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("EditProfile")}
+                  className="self-start mt-3 px-3 py-1.5 rounded-full bg-green-50"
+                >
                   <Text className="text-xs font-semibold text-green-700">Edit profile</Text>
                 </TouchableOpacity>
               </View>
@@ -74,7 +87,9 @@ export default function Profile({ navigation }: any) {
         <View className="px-4 py-5">
           <View className="flex-row gap-3 mb-5">
             <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm">
-              <Text className="text-2xl font-bold text-gray-900">—</Text>
+              <Text className="text-2xl font-bold text-gray-900">
+                {isVendor ? (productCount != null ? String(productCount) : "—") : (favIds ? String(favIds.length) : "—")}
+              </Text>
               <Text className="text-xs text-gray-500 mt-1">{isVendor ? "Products" : "Favorites"}</Text>
             </View>
             <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm">

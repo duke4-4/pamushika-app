@@ -39,12 +39,12 @@ export default function VendorProducts({ navigation }: any) {
           <View className="flex-row gap-3">
             <View className="flex-1 bg-white/15 rounded-2xl p-4">
               <Package width={22} height={22} color="white" />
-              <Text className="text-2xl font-bold text-white mt-3">24</Text>
+              <Text className="text-2xl font-bold text-white mt-3">{loading ? "…" : products.length}</Text>
               <Text className="text-xs text-green-50 mt-1">Active items</Text>
             </View>
             <View className="flex-1 bg-white/15 rounded-2xl p-4">
               <TrendingUp width={22} height={22} color="white" />
-              <Text className="text-2xl font-bold text-white mt-3">$1.2k</Text>
+              <Text className="text-2xl font-bold text-white mt-3">—</Text>
               <Text className="text-xs text-green-50 mt-1">Monthly sales</Text>
             </View>
           </View>

@@ -90,7 +90,12 @@ export default function Search({ navigation }: any) {
           ) : (
           <View className="gap-3">
             {products.map((product) => (
-              <TouchableOpacity key={product.id} activeOpacity={0.86} className="bg-white rounded-2xl p-3 shadow-sm">
+              <TouchableOpacity
+                key={product.id}
+                onPress={() => navigation.navigate("ProductDetails", { productId: product.id })}
+                activeOpacity={0.86}
+                className="bg-white rounded-2xl p-3 shadow-sm"
+              >
                 <View className="flex-row gap-3">
                   <Image source={{ uri: product.image }} className="w-24 h-24 rounded-xl bg-gray-100" />
                   <View className="flex-1">
@@ -108,7 +113,7 @@ export default function Search({ navigation }: any) {
                         </View>
                       ) : <View />}
                       <View className="flex-row items-center gap-1">
-                        <Star width={14} height={14} color="#facc15" />
+                        <Star width={14} height={14} color="#facc15" fill="#facc15" />
                         <Text className="text-xs font-semibold text-gray-800">{product.rating}</Text>
                       </View>
                     </View>
@@ -116,7 +121,10 @@ export default function Search({ navigation }: any) {
                 </View>
                 <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-gray-100">
                   <Text className="text-xs text-gray-500" numberOfLines={1}>{product.vendorName}</Text>
-                  <TouchableOpacity className="px-3 py-1.5 bg-green-600 rounded-full">
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate("VendorProfile", { vendorId: product.vendorId })}
+                    className="px-3 py-1.5 bg-green-600 rounded-full"
+                  >
                     <Text className="text-white text-xs font-semibold">Contact</Text>
                   </TouchableOpacity>
                 </View>
