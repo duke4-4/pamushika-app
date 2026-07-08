@@ -9,7 +9,7 @@ import {
   User,
   ConfirmationResult,
 } from "@react-native-firebase/auth";
-import { Profile, UserType, createProfile, fetchProfile } from "../services/profiles";
+import { Profile, UserType, createProfile, fetchProfile, updateProfile as updateProfileService, UpdateProfileInput } from "../services/profiles";
 
 interface SignUpInput {
   email: string;
@@ -32,6 +32,7 @@ interface AuthContextValue {
     code: string
   ) => Promise<Profile | null>;
   signOut: () => Promise<void>;
+  updateProfile: (input: UpdateProfileInput) => Promise<Profile>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -91,8 +92,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
   };
 
+  const updateProfile = async (input: UpdateProfileInput): Promise<Profile> => {
+    if (!user) throw new Error("Not signed in");
+    const updated = await updateProfileService(user.uid, input);
+    setProfile(updated);
+    return updated;
+  };
+
   const value = useMemo<AuthContextValue>(
-    () => ({ user, profile, initializing, signUpWithEmail, signInWithEmail, sendPhoneCode, confirmPhoneCode, signOut }),
+    () => ({ user, profile, initializing, signUpWithEmail, signInWithEmail, sendPhoneCode, confirmPhoneCode, signOut, updateProfile }),
     [user, profile, initializing]
   );
 
