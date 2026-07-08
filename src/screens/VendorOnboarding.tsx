@@ -24,9 +24,9 @@ const PRODUCT_CATEGORIES = [
 ];
 
 const SUBSCRIPTION_PLANS = [
-  { name: "Starter", price: "$9.99/month", features: ["Up to 20 products", "Basic visibility"] },
-  { name: "Growth", price: "$29.99/month", features: ["Up to 100 products", "Priority visibility"], popular: true },
-  { name: "Premium", price: "$49.99/month", features: ["Unlimited products", "Featured listing", "Sponsored placement"] },
+  { name: "Starter", price: "$5/month",  features: ["Up to 20 products", "Basic visibility"] },
+  { name: "Growth",  price: "$10/month", features: ["Up to 100 products", "Priority listing"], popular: true },
+  { name: "Premium", price: "$15/month", features: ["Unlimited products", "Featured + sponsored placement"] },
 ];
 
 export default function VendorOnboarding({ navigation }: any) {

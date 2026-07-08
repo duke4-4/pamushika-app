@@ -19,6 +19,8 @@ function toVendor(row: any): Vendor {
     categories: row.categories ?? [],
     verified: row.verified,
     plan: row.plan,
+    subscriptionStatus: row.subscription_status,
+    trialEndsAt: row.trial_ends_at ?? null,
   };
 }
 
@@ -86,6 +88,8 @@ export async function createVendor(input: CreateVendorInput): Promise<Vendor> {
       location: input.location,
       categories: input.categories,
       plan: input.plan,
+      subscription_status: "trial",
+      // trial_ends_at auto-set to NOW() + 20 days by DB trigger fn_set_vendor_trial_end
     })
     .select("*")
     .single();

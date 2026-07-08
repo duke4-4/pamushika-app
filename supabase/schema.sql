@@ -4,6 +4,18 @@
 -- NOTE: re-running wipes any rows created since the last run (catalog seed data
 -- and any test accounts/vendors created via the app). Fine in development;
 -- do not re-run against a database with real user data.
+--
+-- WHAT GOES WHERE:
+--   Supabase  → this entire file (tables, RLS, seed, triggers, cron)
+--   Firebase  → nothing from here. Firebase Auth stores email/password and
+--               issues firebase_uid. That UID is the foreign key in profiles.
+--
+-- API KEYS:
+--   EXPO_PUBLIC_SUPABASE_URL / ANON_KEY → .env  (client-safe)
+--   EXPO_PUBLIC_MAPBOX_TOKEN            → .env  (public, restrict by bundle ID in Mapbox dashboard)
+--   PAYNOW_INTEGRATION_ID/KEY           → Supabase Dashboard → Edge Functions → Secrets
+--   AT_API_KEY / AT_USERNAME            → Supabase Dashboard → Edge Functions → Secrets
+--     (Africa's Talking — SMS provider for Zimbabwe: econet/netone/telecel support)
 
 drop table if exists user_favorites;
 drop table if exists vendor_posts;
@@ -11,6 +23,7 @@ drop table if exists products;
 drop table if exists vendors;
 drop table if exists healthy_tips;
 drop table if exists profiles;
+drop function if exists fn_set_vendor_trial_end() cascade;
 
 -- ============================================================
 -- Tables
@@ -30,6 +43,15 @@ create table profiles (
   created_at timestamptz not null default now()
 );
 
+-- Vendor subscription plans and pricing:
+--   Starter  → $5/month  (up to 20 products, basic visibility)
+--   Growth   → $10/month (up to 100 products, priority listing)   ← popular
+--   Premium  → $15/month (unlimited products, featured + sponsored)
+--
+-- New vendors receive a 20-day free trial (subscription_status = 'trial').
+-- A DB trigger auto-sets trial_ends_at = NOW() + 20 days on insert.
+-- A daily Edge Function (supabase/functions/check-trials/) sends an SMS
+-- via Africa's Talking when the trial expires, then marks it 'expired'.
 create table vendors (
   id uuid primary key default gen_random_uuid(),
   owner_firebase_uid text references profiles(firebase_uid),
@@ -41,7 +63,10 @@ create table vendors (
   review_count int not null default 0,
   categories text[] not null default '{}',
   verified boolean not null default false,
-  plan text not null default 'Starter',
+  plan text not null default 'Starter' check (plan in ('Starter', 'Growth', 'Premium')),
+  subscription_status text not null default 'trial'
+    check (subscription_status in ('trial', 'active', 'expired', 'cancelled')),
+  trial_ends_at timestamptz,
   created_at timestamptz not null default now()
 );
 
@@ -97,6 +122,24 @@ create unique index ux_user_product_fav on user_favorites (firebase_uid, product
 create unique index ux_user_vendor_fav  on user_favorites (firebase_uid, vendor_id)  where vendor_id  is not null;
 
 -- ============================================================
+-- Trigger: auto-set trial_ends_at for new vendors
+-- ============================================================
+
+create or replace function fn_set_vendor_trial_end()
+returns trigger language plpgsql as $$
+begin
+  if NEW.subscription_status = 'trial' and NEW.trial_ends_at is null then
+    NEW.trial_ends_at := now() + interval '20 days';
+  end if;
+  return NEW;
+end;
+$$;
+
+create trigger trg_vendor_trial_end
+before insert on vendors
+for each row execute function fn_set_vendor_trial_end();
+
+-- ============================================================
 -- Row Level Security
 -- ============================================================
 
@@ -127,20 +170,15 @@ alter table user_favorites enable row level security;
 create policy "Permissive all (Phase 2, hardened later)" on user_favorites for all using (true) with check (true);
 
 -- ============================================================
--- Seed data — transcribed from src/data/mockData.ts and the
--- hardcoded posts array in src/screens/VendorPosts.tsx, so the
--- app looks identical to the mock version on first run.
--- Fixed UUIDs so vendor_posts/products can reference vendors
--- deterministically, and so the app can pin a "demo vendor"
--- (see src/services/vendors.ts DEMO_VENDOR_ID) until Phase 2 auth
--- replaces it with the logged-in vendor's real id.
+-- Seed data — demo vendors are 'active' (no trial needed).
+-- Real vendors registered via the app start as 'trial'.
 -- ============================================================
 
-insert into vendors (id, name, location, rating, review_count, categories, verified, plan) values
-  ('11111111-1111-1111-1111-111111111111', 'Green Market Fresh',     'Avondale, Harare',      4.8, 124, array['Fruits','Vegetables','Herbs & Spices'],     true,  'Premium'),
-  ('22222222-2222-2222-2222-222222222222', 'African Heritage Foods', 'Mbare, Harare',         4.9, 89,  array['Indigenous Foods','Grains & Cereals'],      true,  'Growth'),
-  ('33333333-3333-3333-3333-333333333333', 'Organic Farm Co.',       'Mount Pleasant, Harare', 4.6, 67,  array['Fruits','Vegetables','Organic Foods'],      true,  'Growth'),
-  ('44444444-4444-4444-4444-444444444444', 'Local Harvest Market',   'Borrowdale, Harare',    4.5, 42,  array['Fruits','Vegetables'],                      false, 'Starter');
+insert into vendors (id, name, location, rating, review_count, categories, verified, plan, subscription_status) values
+  ('11111111-1111-1111-1111-111111111111', 'Green Market Fresh',     'Avondale, Harare',       4.8, 124, array['Fruits','Vegetables','Herbs & Spices'],  true,  'Premium', 'active'),
+  ('22222222-2222-2222-2222-222222222222', 'African Heritage Foods', 'Mbare, Harare',          4.9, 89,  array['Indigenous Foods','Grains & Cereals'],   true,  'Growth',  'active'),
+  ('33333333-3333-3333-3333-333333333333', 'Organic Farm Co.',       'Mount Pleasant, Harare', 4.6, 67,  array['Fruits','Vegetables','Organic Foods'],   true,  'Growth',  'active'),
+  ('44444444-4444-4444-4444-444444444444', 'Local Harvest Market',   'Borrowdale, Harare',     4.5, 42,  array['Fruits','Vegetables'],                   false, 'Starter', 'active');
 
 insert into products (id, vendor_id, name, category, price, unit, image_url, description, nutrition, benefits, rating) values
   ('a1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Fresh Ginger', 'Herbs & Spices', 0.50, 'per 100g',
@@ -210,3 +248,33 @@ insert into healthy_tips (type, title, description, image_url) values
     'https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=400'),
   ('tip', 'Nutrition Tip', 'Eat a variety of colorful fruits and vegetables daily to ensure you get all essential vitamins and minerals.',
     'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400');
+
+-- ============================================================
+-- Scheduled trial check (runs daily via pg_cron)
+-- ============================================================
+-- SETUP STEPS (do once, after enabling pg_cron in Dashboard → Database → Extensions):
+--
+-- 1. Enable extension:
+--      create extension if not exists pg_cron;
+--
+-- 2. Schedule the Edge Function to run every day at 08:00 UTC:
+--      select cron.schedule(
+--        'check-vendor-trials',
+--        '0 8 * * *',
+--        $$
+--          select net.http_post(
+--            url     := 'https://<YOUR_PROJECT_REF>.supabase.co/functions/v1/check-trials',
+--            headers := jsonb_build_object(
+--                         'Content-Type', 'application/json',
+--                         'Authorization', 'Bearer <YOUR_SERVICE_ROLE_KEY>'
+--                       ),
+--            body    := '{}'::jsonb
+--          );
+--        $$
+--      );
+--
+-- Replace <YOUR_PROJECT_REF> and <YOUR_SERVICE_ROLE_KEY> from:
+--   Dashboard → Project Settings → API → service_role key (secret, never in app).
+--
+-- To cancel: select cron.unschedule('check-vendor-trials');
+-- To view:   select * from cron.job;

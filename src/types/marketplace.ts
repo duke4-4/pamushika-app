@@ -30,6 +30,8 @@ export interface Vendor {
   categories: string[];
   verified: boolean;
   plan: "Starter" | "Growth" | "Premium";
+  subscriptionStatus?: "trial" | "active" | "expired" | "cancelled";
+  trialEndsAt?: string | null;
 }
 
 export interface VendorPost {
