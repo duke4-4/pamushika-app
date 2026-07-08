@@ -199,25 +199,45 @@ export default function VendorOnboarding({ navigation }: any) {
           )}
 
           {currentStep === 6 && (
-            <View className="gap-4">
-              <View className="bg-green-50 rounded-lg p-4 border border-green-200">
-                <Text className="font-semibold mb-2 text-gray-900">Selected Plan: {formData.selectedPlan}</Text>
-                <Text className="text-2xl font-bold text-green-600">{SUBSCRIPTION_PLANS.find(p => p.name === formData.selectedPlan)?.price}</Text>
+            <View className="gap-5">
+              {/* Trial confirmation card */}
+              <View className="bg-green-50 rounded-2xl p-5 border border-green-200 items-center">
+                <View className="w-16 h-16 bg-green-600 rounded-full items-center justify-center mb-3">
+                  <Check width={32} height={32} color="white" />
+                </View>
+                <Text className="text-2xl font-extrabold text-green-700">20 Days Free!</Text>
+                <Text className="text-sm text-green-600 text-center mt-1">
+                  Your listing goes live immediately — no payment needed today.
+                </Text>
               </View>
-              <Label>Payment Method</Label>
-              <View className="gap-3">
-                <TouchableOpacity className="w-full p-4 rounded-lg border-2 border-green-600 bg-green-50">
-                  <Text className="font-medium text-gray-900">EcoCash</Text>
-                  <Text className="text-sm text-gray-600">Pay with mobile money</Text>
-                </TouchableOpacity>
-                <TouchableOpacity className="w-full p-4 rounded-lg border-2 border-gray-200">
-                  <Text className="font-medium text-gray-900">OneMoney</Text>
-                  <Text className="text-sm text-gray-600">Pay with mobile money</Text>
-                </TouchableOpacity>
-                <TouchableOpacity className="w-full p-4 rounded-lg border-2 border-gray-200">
-                  <Text className="font-medium text-gray-900">Credit Card</Text>
-                  <Text className="text-sm text-gray-600">Visa, Mastercard</Text>
-                </TouchableOpacity>
+
+              {/* Plan summary */}
+              <View className="bg-white rounded-2xl p-4 border border-gray-200 gap-2">
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-semibold text-gray-900">Selected plan</Text>
+                  <View className="px-3 py-1 bg-green-50 rounded-full">
+                    <Text className="text-green-700 font-bold text-sm">{formData.selectedPlan}</Text>
+                  </View>
+                </View>
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-gray-500 text-sm">After trial ends</Text>
+                  <Text className="font-bold text-gray-900">
+                    {SUBSCRIPTION_PLANS.find(p => p.name === formData.selectedPlan)?.price}
+                  </Text>
+                </View>
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-gray-500 text-sm">Payment</Text>
+                  <Text className="font-medium text-gray-700">EcoCash / Paynow</Text>
+                </View>
+              </View>
+
+              {/* SMS notice */}
+              <View className="bg-yellow-50 rounded-2xl p-4 border border-yellow-200">
+                <Text className="font-semibold text-yellow-800 mb-1">How payment works</Text>
+                <Text className="text-sm text-yellow-700 leading-relaxed">
+                  We'll send an SMS to {formData.phone || "your phone number"} when your 20-day trial ends.
+                  You'll then pay via EcoCash or Paynow directly in the app to keep your listing active.
+                </Text>
               </View>
             </View>
           )}
@@ -229,7 +249,7 @@ export default function VendorOnboarding({ navigation }: any) {
             disabled={submitting || (currentStep === 4 && !formData.termsAccepted)}
             className={submitting || (currentStep === 4 && !formData.termsAccepted) ? "opacity-50" : ""}
           >
-            {submitting ? "Setting up your account..." : currentStep === STEPS.length - 1 ? "Complete Payment" : "Continue"}
+            {submitting ? "Setting up your account..." : currentStep === STEPS.length - 1 ? "Start 20-Day Free Trial" : "Continue"}
           </Button>
         </View>
       </KeyboardAvoidingView>

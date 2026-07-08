@@ -1,7 +1,7 @@
 import React from "react";
 import { Alert, View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Bell, Crown, DollarSign, Eye, MapPin, Package, Settings, ShoppingBag, Star, Users } from "lucide-react-native";
+import { AlertTriangle, Bell, Clock, Crown, DollarSign, Eye, MapPin, Package, Settings, ShoppingBag, Star, Users } from "lucide-react-native";
 import BottomNav from "../components/BottomNav";
 import { navigateToTab } from "../navigation/tabs";
 import { useAuth } from "../context/AuthContext";
@@ -28,6 +28,12 @@ export default function VendorDashboard({ navigation }: any) {
   ];
 
   const isPremium = vendor?.plan === "Premium";
+  const status = vendor?.subscriptionStatus;
+  const trialEndsAt = vendor?.trialEndsAt;
+
+  const trialDaysLeft = trialEndsAt
+    ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86_400_000))
+    : null;
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -70,10 +76,47 @@ export default function VendorDashboard({ navigation }: any) {
         </SafeAreaView>
 
         <View className="px-4 py-5 gap-5">
-          {/* Upgrade banner (only for non-Premium) */}
-          {!isPremium && vendor && (
+          {/* Trial expiry banner */}
+          {status === "expired" && (
             <TouchableOpacity
-              onPress={() => Alert.alert("Upgrade to Premium", "Premium vendor plan with priority listing and analytics is coming in Phase 4.")}
+              onPress={() => Alert.alert("Subscription expired", "Your free trial has ended. Paynow payment integration is coming in Phase 4 — contact us at pamushikain@gmail.com to pay manually for now.")}
+              className="bg-red-500 rounded-2xl p-4 flex-row items-center gap-3"
+              activeOpacity={0.85}
+            >
+              <View className="w-12 h-12 bg-white/20 rounded-xl items-center justify-center">
+                <AlertTriangle width={24} height={24} color="white" />
+              </View>
+              <View className="flex-1">
+                <Text className="font-bold text-white">Trial Expired</Text>
+                <Text className="text-xs text-red-100 mt-0.5">Your listing is paused — tap to reactivate</Text>
+              </View>
+              <View className="px-3 py-1.5 bg-white rounded-full">
+                <Text className="text-red-600 text-xs font-bold">Pay Now</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {/* Active trial countdown */}
+          {status === "trial" && trialDaysLeft !== null && (
+            <View className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex-row items-center gap-3">
+              <View className="w-12 h-12 bg-blue-500 rounded-xl items-center justify-center">
+                <Clock width={24} height={24} color="white" />
+              </View>
+              <View className="flex-1">
+                <Text className="font-bold text-blue-900">Free Trial Active</Text>
+                <Text className="text-xs text-blue-600 mt-0.5">
+                  {trialDaysLeft > 0
+                    ? `${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} remaining — we'll SMS you when it ends`
+                    : "Trial ends today — check your SMS for payment instructions"}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Upgrade banner (only for active, non-Premium vendors) */}
+          {status === "active" && !isPremium && (
+            <TouchableOpacity
+              onPress={() => Alert.alert("Upgrade to Premium", "Premium plan ($15/month) with priority listing and analytics is coming in Phase 4.")}
               className="bg-yellow-400 rounded-2xl p-4 flex-row items-center gap-3"
               activeOpacity={0.85}
             >
@@ -82,7 +125,7 @@ export default function VendorDashboard({ navigation }: any) {
               </View>
               <View className="flex-1">
                 <Text className="font-bold text-white">Upgrade to Premium</Text>
-                <Text className="text-xs text-yellow-100 mt-0.5">Get priority listing and analytics</Text>
+                <Text className="text-xs text-yellow-100 mt-0.5">$15/month — featured listing + analytics</Text>
               </View>
               <View className="px-3 py-1.5 bg-white rounded-full">
                 <Text className="text-yellow-600 text-xs font-bold">Upgrade</Text>
