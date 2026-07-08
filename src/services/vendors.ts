@@ -54,6 +54,29 @@ export async function fetchVendorByOwner(ownerFirebaseUid: string): Promise<Vend
   return data ? toVendor(data) : null;
 }
 
+export interface UpdateVendorInput {
+  name?: string;
+  location?: string;
+  categories?: string[];
+}
+
+export async function updateVendor(vendorId: string, input: UpdateVendorInput): Promise<Vendor> {
+  const patch: Record<string, unknown> = {};
+  if (input.name !== undefined) patch.name = input.name;
+  if (input.location !== undefined) patch.location = input.location;
+  if (input.categories !== undefined) patch.categories = input.categories;
+
+  const { data, error } = await supabase
+    .from("vendors")
+    .update(patch)
+    .eq("id", vendorId)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return toVendor(data);
+}
+
 export async function createVendor(input: CreateVendorInput): Promise<Vendor> {
   const { data, error } = await supabase
     .from("vendors")

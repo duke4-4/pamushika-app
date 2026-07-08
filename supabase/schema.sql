@@ -5,6 +5,7 @@
 -- and any test accounts/vendors created via the app). Fine in development;
 -- do not re-run against a database with real user data.
 
+drop table if exists user_favorites;
 drop table if exists vendor_posts;
 drop table if exists products;
 drop table if exists vendors;
@@ -80,6 +81,21 @@ create table healthy_tips (
   published_at date not null default current_date
 );
 
+-- Consumer saved favorites (products and vendors).
+-- Each row targets exactly one of product_id or vendor_id.
+create table user_favorites (
+  id uuid primary key default gen_random_uuid(),
+  firebase_uid text not null references profiles(firebase_uid) on delete cascade,
+  product_id uuid references products(id) on delete cascade,
+  vendor_id uuid references vendors(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  constraint chk_exactly_one_target check (
+    (product_id is not null)::int + (vendor_id is not null)::int = 1
+  )
+);
+create unique index ux_user_product_fav on user_favorites (firebase_uid, product_id) where product_id is not null;
+create unique index ux_user_vendor_fav  on user_favorites (firebase_uid, vendor_id)  where vendor_id  is not null;
+
 -- ============================================================
 -- Row Level Security
 -- ============================================================
@@ -106,6 +122,9 @@ create policy "Permissive write (Phase 2, hardened later)" on profiles for inser
 create policy "Permissive update (Phase 2, hardened later)" on profiles for update using (true);
 create policy "Permissive write (Phase 2, hardened later)" on vendors for insert with check (true);
 create policy "Permissive update (Phase 2, hardened later)" on vendors for update using (true);
+
+alter table user_favorites enable row level security;
+create policy "Permissive all (Phase 2, hardened later)" on user_favorites for all using (true) with check (true);
 
 -- ============================================================
 -- Seed data — transcribed from src/data/mockData.ts and the

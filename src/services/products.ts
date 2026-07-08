@@ -46,3 +46,24 @@ export async function fetchProductsByVendor(vendorId: string): Promise<Product[]
   if (error) throw error;
   return (data ?? []).map(toProduct);
 }
+
+export async function fetchProductById(productId: string): Promise<Product | null> {
+  const { data, error } = await supabase
+    .from("products")
+    .select(PRODUCT_SELECT)
+    .eq("id", productId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? toProduct(data) : null;
+}
+
+export async function fetchProductCountByVendor(vendorId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("products")
+    .select("id", { count: "exact", head: true })
+    .eq("vendor_id", vendorId);
+
+  if (error) throw error;
+  return count ?? 0;
+}

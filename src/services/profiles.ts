@@ -42,6 +42,31 @@ export async function fetchProfile(firebaseUid: string): Promise<Profile | null>
   return data ? toProfile(data) : null;
 }
 
+export interface UpdateProfileInput {
+  fullName?: string;
+  email?: string | null;
+  phone?: string | null;
+  location?: string | null;
+}
+
+export async function updateProfile(firebaseUid: string, input: UpdateProfileInput): Promise<Profile> {
+  const patch: Record<string, unknown> = {};
+  if (input.fullName !== undefined) patch.full_name = input.fullName;
+  if (input.email !== undefined) patch.email = input.email;
+  if (input.phone !== undefined) patch.phone = input.phone;
+  if (input.location !== undefined) patch.location = input.location;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update(patch)
+    .eq("firebase_uid", firebaseUid)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return toProfile(data);
+}
+
 export async function createProfile(input: CreateProfileInput): Promise<Profile> {
   const { data, error } = await supabase
     .from("profiles")
