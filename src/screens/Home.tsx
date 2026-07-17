@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { Alert, View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Apple, Bell, ChevronRight, Leaf, LayoutGrid, MapPin, Shield, Sparkles, Sprout, Star, User, Wheat } from "lucide-react-native";
 import BottomNav from "../components/BottomNav";
@@ -38,13 +38,22 @@ export default function Home({ navigation }: any) {
         {/* Header */}
         <SafeAreaView edges={["top"]} className="bg-green-700 px-4 pt-4 pb-5">
           <View className="flex-row items-center justify-between mb-4">
-            <View>
-              <View className="flex-row items-center gap-1 mb-1">
-                <MapPin width={12} height={12} color="#bbf7d0" />
-                <Text className="text-green-200 text-xs">{location}</Text>
+            <View className="flex-row items-center gap-2">
+              <View className="w-10 h-10 bg-white rounded-xl items-center justify-center p-1.5">
+                <Image
+                  source={require("../../assets/logo-mark.png")}
+                  className="w-full h-full"
+                  resizeMode="contain"
+                />
               </View>
-              <Text className="text-2xl font-extrabold text-white tracking-tight">PAMUSHIKA IN</Text>
-              <Text className="text-green-200 text-xs mt-0.5">Fresh produce at your doorstep</Text>
+              <View>
+                <View className="flex-row items-center gap-1 mb-1">
+                  <MapPin width={12} height={12} color="#bbf7d0" />
+                  <Text className="text-green-200 text-xs">{location}</Text>
+                </View>
+                <Text className="text-2xl font-extrabold text-white tracking-tight">Pamushika In</Text>
+                <Text className="text-green-200 text-xs mt-0.5">Fresh produce at your doorstep</Text>
+              </View>
             </View>
             <View className="flex-row gap-2">
               <TouchableOpacity className="w-10 h-10 bg-white/15 rounded-full items-center justify-center border border-white/20">

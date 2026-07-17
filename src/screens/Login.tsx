@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { Alert, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ConfirmationResult } from "@react-native-firebase/auth";
 import { Button } from "../components/ui/Button";
@@ -79,7 +79,14 @@ export default function Login({ navigation }: any) {
 
         <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 32 }}>
           <View className="mb-8 items-center">
-            <Text className="text-gray-600 text-sm">Welcome back to PAMUSHIKA IN</Text>
+            <View className="w-16 h-16 bg-white rounded-2xl items-center justify-center shadow-sm mb-3 p-2.5">
+              <Image
+                source={require("../../assets/logo-mark.png")}
+                className="w-full h-full"
+                resizeMode="contain"
+              />
+            </View>
+            <Text className="text-gray-600 text-sm">Welcome back to Pamushika In</Text>
           </View>
 
           <View className="bg-white rounded-2xl p-1 flex-row shadow-sm mb-6">

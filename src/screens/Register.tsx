@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { Alert, View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -58,7 +58,14 @@ export default function Register({ navigation }: any) {
 
         <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 24 }}>
           <View className="mb-6 items-center">
-            <Text className="text-gray-600 text-sm">Join PAMUSHIKA IN today</Text>
+            <View className="w-16 h-16 bg-white rounded-2xl items-center justify-center shadow-sm mb-3 p-2.5">
+              <Image
+                source={require("../../assets/logo-mark.png")}
+                className="w-full h-full"
+                resizeMode="contain"
+              />
+            </View>
+            <Text className="text-gray-600 text-sm">Join Pamushika In today</Text>
           </View>
 
           <View className="gap-4">

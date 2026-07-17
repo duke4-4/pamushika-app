@@ -19,7 +19,7 @@ module.exports = {
       // falls back to the local (gitignored) file for local/dev-client builds.
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
       adaptiveIcon: {
-        backgroundColor: "#E6F4FE",
+        backgroundColor: "#FFFFFF",
         foregroundImage: "./assets/android-icon-foreground.png",
         backgroundImage: "./assets/android-icon-background.png",
         monochromeImage: "./assets/android-icon-monochrome.png",
@@ -29,7 +29,19 @@ module.exports = {
     web: {
       favicon: "./assets/favicon.png",
     },
-    plugins: ["@react-native-firebase/app", "@react-native-firebase/auth"],
+    plugins: [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/splash-icon.png",
+          imageWidth: 220,
+          resizeMode: "contain",
+          backgroundColor: "#16a34a",
+        },
+      ],
+    ],
     extra: {
       eas: {
         projectId: "aed057c7-d40e-4f93-96af-4a566b57ed01",

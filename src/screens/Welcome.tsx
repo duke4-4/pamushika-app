@@ -1,8 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../components/ui/Button";
-import { Apple, Leaf, ShoppingBasket } from "lucide-react-native";
 
 export default function Welcome({ navigation }: any) {
   return (
@@ -10,22 +9,18 @@ export default function Welcome({ navigation }: any) {
       {/* Hero Section */}
       <View className="flex-1 items-center justify-center px-6 py-8">
         <View className="items-center w-full gap-6">
-          {/* Logo/Icon */}
-          <View className="flex-row justify-center gap-4 mb-6">
-            <View className="w-20 h-20 bg-green-500 rounded-full items-center justify-center shadow-lg">
-              <Apple width={40} height={40} color="white" />
-            </View>
-            <View className="w-20 h-20 bg-yellow-400 rounded-full items-center justify-center shadow-lg">
-              <Leaf width={40} height={40} color="white" />
-            </View>
-            <View className="w-20 h-20 bg-red-500 rounded-full items-center justify-center shadow-lg">
-              <ShoppingBasket width={40} height={40} color="white" />
-            </View>
+          {/* Logo */}
+          <View className="w-28 h-28 bg-white rounded-3xl items-center justify-center shadow-lg mb-2 p-3">
+            <Image
+              source={require("../../assets/logo-mark.png")}
+              className="w-full h-full"
+              resizeMode="contain"
+            />
           </View>
 
           <View className="items-center">
             <Text className="text-3xl font-bold text-gray-900 mb-3 text-center">
-              PAMUSHIKA IN
+              Pamushika In
             </Text>
             <Text className="text-base text-gray-600 px-4 text-center">
               Connecting you with local vendors for fresh fruits, vegetables, and indigenous African foods
